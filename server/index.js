@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
-const movieRoutes = require('./routes/movies');
+const movieRoutes = require('./routes/movies'); //movoes
 
 require('dotenv').config();
 
