@@ -3,11 +3,10 @@ const mongoose = require('mongoose');
 const Movie = require('../models/movie');
 const User = require('../models/user');
 const auth = require('../middleware/auth');
-const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
-//0. getting all movies
+//0. Getting all movies
 router.get('/', async (req, res) => {
   try {
     const movies = await Movie.find();  
@@ -80,42 +79,41 @@ router.delete('/:id/platforms', async (req, res) => {
   res.json(movie.platforms);
 });
 
-//5. Atomic Stats Update with Multiple Operators
-router.patch('/:id/stats', async (req, res) => {
-  const { incViews, mulScore, minRating, maxRating, setFields, unsetFields } = req.body;
-  const ops = {};
-  if (mulScore)  ops.$mul = { 'stats.score': mulScore };
-  if (incViews)  ops.$inc = { 'stats.views': incViews };
-  if (minRating) ops.$min = { 'stats.low':   minRating };
-  if (maxRating) ops.$max = { 'stats.high':  maxRating };
-  if (setFields) ops.$set = setFields;
-  if (unsetFields) ops.$unset = unsetFields.reduce((u, f) => (u[f] = '' , u), {});
-  const movie = await Movie.findByIdAndUpdate(req.params.id, ops, { new: true });
-  res.json(movie.stats);
-});
-
 //6. Update a Nested Review with Positional Operator
-router.patch('/:movieId/reviews', authMiddleware, async (req, res) => {
+router.patch('/:movieId/reviews', auth, async (req, res) => {
   const { rating, comment } = req.body;
   const userId = req.userId; 
 
   try {
+    // Step 1: Get the user's name from the User model
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userName = user.username;  // Assuming the user's name is stored in the 'name' field
+
+    // Step 2: Add the review to the movie document
     const movie = await Movie.findOneAndUpdate(
-      { _id: req.params.movieId, 'reviews.user': userId },
+      { _id: req.params.movieId },
       {
-        $set: {
-          'reviews.$.rating': rating,
-          'reviews.$.comment': comment
+        $push: {
+          reviews: {
+            user: userName,  
+            rating: rating,
+            comment: comment
+          }
         }
       },
       { new: true }
     );
 
     if (!movie) {
-      return res.status(404).json({ message: 'Review not found for this user' });
+      return res.status(404).json({ message: 'Movie not found' });
     }
 
-    res.json(movie.reviews);
+    res.json(movie.reviews);  // Return the updated reviews
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Something went wrong' });
@@ -170,6 +168,19 @@ router.post('/liked', auth, async (req, res) => {
     res.json({ likedMovies: user.likedMovies });
   } catch (err) {
     res.status(400).json({ error: err.message });
+  }
+});
+
+//10. get all the reviews of a movie
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id).select('reviews');
+    if (!movie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+    res.json(movie.reviews);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch reviews', error });
   }
 });
 

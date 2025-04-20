@@ -21,7 +21,7 @@ router.post('/signup', async(req, res)=>{
       {expiresIn: '1d'}
     );
     res.json({token})
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 })
@@ -32,10 +32,10 @@ router.post('/signin', async(req, res)=>{
     const {email, password} = req.body;
     if(!email || !password){
       res.status(400).json({
-        message: 'username and password required'
+        message: 'email and password required'
       })
     }
-    const user = findOne({email});
+    const user = await User.findOne({email});
     if(!user){
       res.status(404).json({
         message: 'user not found'
@@ -53,9 +53,38 @@ router.post('/signin', async(req, res)=>{
       {expiresIn: '1d'}
     );
     res.json({token});
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({ message: err.message });
   }
 })
+
+// Get the watchlist of a user
+router.get('/watchlist', auth, async (req, res) => {
+  try {
+    // Uses req.userId from auth middleware
+    const user = await User.findById(req.userId).populate('watchlist');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ watchlist: user.watchlist });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get the liked movies list of a user
+router.get('/liked', auth, async (req, res) => {
+  try {
+    // Uses req.userId from auth middleware
+    const user = await User.findById(req.userId).populate('likedMovies');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json({ likedMovies: user.likedMovies });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 module.exports = router
