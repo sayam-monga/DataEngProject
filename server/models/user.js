@@ -16,4 +16,4 @@ const userSchema = new mongoose.Schema({
   reviews: [userReviewSchema]
 });
 
-module.exports = mongoose.model('User', userSchema); //new
+module.exports = mongoose.model('User', userSchema); 
