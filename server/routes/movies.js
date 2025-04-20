@@ -184,4 +184,35 @@ router.get('/:id/reviews', async (req, res) => {
   }
 });
 
+//
+router.delete('/watchlist', auth, async (req, res) => {
+  try {
+    const { movieId } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $pull: { watchlist: movieId } },  // remove the movieId from watchlist
+      { new: true }
+    );
+    res.json({ watchlist: user.watchlist });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+//
+router.delete('/liked', auth, async (req, res) => {
+  try {
+    const { movieId } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { $pull: { likedMovies: movieId } },  // remove the movieId from likedMovies
+      { new: true }
+    );
+    res.json({ likedMovies: user.likedMovies });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+
 module.exports = router;
