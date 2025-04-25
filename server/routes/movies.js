@@ -6,7 +6,7 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-//0. Getting all movies
+//1. Getting all movies
 router.get('/', async (req, res) => {
   try {
     const movies = await Movie.find();  
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-//1. Search by Cast, Title, or Genre
+//2. Search by Cast, Title, or Genre
 router.get('/search', async (req, res) => {
   const { cast, title, genres } = req.query;
 
@@ -34,7 +34,7 @@ router.get('/search', async (req, res) => {
   }
 });
 
-//2. Append Platforms with Advanced $push
+//3. Append Platforms with Advanced $push
 router.post('/:id/platforms', async (req, res) => {
   const { platforms } = req.body; // e.g. ["Max","Paramount+"]
   const movie = await Movie.findByIdAndUpdate(
@@ -54,7 +54,7 @@ router.post('/:id/platforms', async (req, res) => {
   res.json(movie.platforms);
 });
 
-//3. Add Unique Cast Members via $addToSet
+//4. Add Unique Cast Members via $addToSet
 router.post('/:id/cast', async (req, res) => {
   const { cast } = req.body; // e.g. ["Ken Watanabe"]
   const movie = await Movie.findByIdAndUpdate(
@@ -65,7 +65,7 @@ router.post('/:id/cast', async (req, res) => {
   res.json(movie.cast);
 });
 
-//4. Remove Platforms with $pull and $pullAll
+//5. Remove Platforms with $pull and $pullAll
 router.delete('/:id/platforms', async (req, res) => {
   const { removeAll, platforms } = req.body;
   const update = removeAll
@@ -171,7 +171,7 @@ router.post('/liked', auth, async (req, res) => {
   }
 });
 
-//10. get all the reviews of a movie
+//10. Get all the reviews of a movie
 router.get('/:id/reviews', async (req, res) => {
   try {
     const movie = await Movie.findById(req.params.id).select('reviews');
@@ -184,7 +184,7 @@ router.get('/:id/reviews', async (req, res) => {
   }
 });
 
-//
+//11. Removing from watchlist
 router.delete('/watchlist', auth, async (req, res) => {
   try {
     const { movieId } = req.body;
@@ -199,7 +199,7 @@ router.delete('/watchlist', auth, async (req, res) => {
   }
 });
 
-//
+//12. Removing from liked list
 router.delete('/liked', auth, async (req, res) => {
   try {
     const { movieId } = req.body;
