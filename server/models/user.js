@@ -7,6 +7,21 @@ const userReviewSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
 });
 
+const userPreferencesSchema = new mongoose.Schema({
+  favoriteGenres: [{ type: String }],
+  favoriteDirectors: [{ type: String }],
+  favoriteActors: [{ type: String }],
+  preferredLanguages: [{ type: String }],
+  preferredRuntime: {
+    min: Number,
+    max: Number,
+  },
+  preferredReleaseYears: {
+    min: Number,
+    max: Number,
+  },
+});
+
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -40,15 +55,34 @@ const userSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    watchedMovies: [
+      {
+        movie: { type: mongoose.Schema.Types.ObjectId, ref: "Movie" },
+        date: { type: Date, default: Date.now },
+        rating: Number,
+      },
+    ],
     reviews: [userReviewSchema],
+    preferences: userPreferencesSchema,
+    recommendations: [
+      {
+        movie: { type: mongoose.Schema.Types.ObjectId, ref: "Movie" },
+        score: Number,
+        reason: String,
+        date: { type: Date, default: Date.now },
+      },
+    ],
+    lastRecommendationUpdate: Date,
   },
   {
     timestamps: true,
   }
 );
 
-// Add index for faster queries
+// Add indexes for faster queries
 userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
+userSchema.index({ "preferences.favoriteGenres": 1 });
+userSchema.index({ "preferences.favoriteDirectors": 1 });
+userSchema.index({ "preferences.favoriteActors": 1 });
 
 module.exports = mongoose.model("User", userSchema);

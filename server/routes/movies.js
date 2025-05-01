@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const Movie = require("../models/movie");
 const User = require("../models/user");
 const auth = require("../middleware/auth");
-
+const recommendationService = require("../services/recommendationService");
 const router = express.Router();
 
 // Get all movies with user's liked status
@@ -390,6 +390,53 @@ router.get("/:movieId/reviews", async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to fetch reviews", error: error.message });
+  }
+});
+
+// Get personalized recommendations
+router.get("/recommendations", auth, async (req, res) => {
+  try {
+    const recommendations =
+      await recommendationService.getPersonalizedRecommendations(req.userId);
+    res.json(recommendations);
+  } catch (error) {
+    console.error("Error getting recommendations:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to get recommendations", error: error.message });
+  }
+});
+
+// Get user preferences
+router.get("/preferences", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("preferences");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user.preferences || {});
+  } catch (error) {
+    console.error("Error getting preferences:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to get preferences", error: error.message });
+  }
+});
+
+// Update user preferences
+router.put("/preferences", auth, async (req, res) => {
+  try {
+    const preferences = req.body;
+    const updatedUser = await recommendationService.updateUserPreferences(
+      req.userId,
+      preferences
+    );
+    res.json(updatedUser.preferences);
+  } catch (error) {
+    console.error("Error updating preferences:", error);
+    res
+      .status(500)
+      .json({ message: "Failed to update preferences", error: error.message });
   }
 });
 
